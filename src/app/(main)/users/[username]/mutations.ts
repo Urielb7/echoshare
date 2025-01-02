@@ -7,6 +7,8 @@ import {
   QueryFilters,
   useMutation,
   useQueryClient,
+  Query,
+  QueryKey,
 } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { updateUserProfile } from "./actions";
@@ -36,8 +38,23 @@ export function useUpdateProfileMutation() {
     onSuccess: async ([updatedUser, uploadResult]) => {
       const newAvatarUrl = uploadResult?.[0].serverData.avatarUrl;
 
-      const queryFilter: QueryFilters = {
+      const queryFilter: QueryFilters<
+        InfiniteData<PostsPage, string | null>,
+        Error,
+        InfiniteData<PostsPage, string | null>,
+        QueryKey
+      > = {
         queryKey: ["post-feed"],
+        predicate(
+          query: Query<
+            InfiniteData<PostsPage, string | null>,
+            Error,
+            InfiniteData<PostsPage, string | null>,
+            QueryKey
+          >,
+        ) {
+          return true; // Ajoutez votre logique ici si nécessaire
+        },
       };
 
       await queryClient.cancelQueries(queryFilter);
@@ -45,7 +62,7 @@ export function useUpdateProfileMutation() {
       queryClient.setQueriesData<InfiniteData<PostsPage, string | null>>(
         queryFilter,
         (oldData) => {
-          if (!oldData) return;
+          if (!oldData) return oldData; // Vérification pour s'assurer que oldData n'est pas undefined
 
           return {
             pageParams: oldData.pageParams,

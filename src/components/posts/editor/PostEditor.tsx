@@ -144,6 +144,7 @@ function AddAttachmentsButton({
         <ImageIcon size={20} />
       </Button>
       <input
+        aria-label="Attach files"
         type="file"
         accept="image/*, video/*"
         multiple
@@ -220,6 +221,7 @@ function AttachmentPreview({
         <button
           onClick={onRemoveClick}
           className="absolute right-3 top-3 rounded-full bg-foreground p-1.5 text-background transition-colors hover:bg-foreground/60"
+          aria-label="Add attachments"
         >
           <X size={20} />
         </button>

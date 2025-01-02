@@ -4,6 +4,8 @@ import {
   QueryFilters,
   useMutation,
   useQueryClient,
+  Query,
+  QueryKey,
 } from "@tanstack/react-query";
 import { usePathname, useRouter } from "next/navigation";
 import { useToast } from "../ui/use-toast";
@@ -20,14 +22,31 @@ export function useDeletePostMutation() {
   const mutation = useMutation({
     mutationFn: deletePost,
     onSuccess: async (deletedPost) => {
-      const queryFilter: QueryFilters = { queryKey: ["post-feed"] };
+      const queryFilter: QueryFilters<
+        InfiniteData<PostsPage, string | null>,
+        Error,
+        InfiniteData<PostsPage, string | null>,
+        QueryKey
+      > = {
+        queryKey: ["post-feed"],
+        predicate(
+          query: Query<
+            InfiniteData<PostsPage, string | null>,
+            Error,
+            InfiniteData<PostsPage, string | null>,
+            QueryKey
+          >,
+        ) {
+          return true; // Ajoutez votre logique ici si nécessaire
+        },
+      };
 
       await queryClient.cancelQueries(queryFilter);
 
       queryClient.setQueriesData<InfiniteData<PostsPage, string | null>>(
         queryFilter,
         (oldData) => {
-          if (!oldData) return;
+          if (!oldData) return oldData; // Vérification pour s'assurer que oldData n'est pas undefined
 
           return {
             pageParams: oldData.pageParams,

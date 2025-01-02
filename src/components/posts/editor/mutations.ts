@@ -6,6 +6,7 @@ import {
   QueryFilters,
   useMutation,
   useQueryClient,
+  Query,
 } from "@tanstack/react-query";
 import { submitPost } from "./actions";
 
@@ -19,23 +20,28 @@ export function useSubmitPostMutation() {
   const mutation = useMutation({
     mutationFn: submitPost,
     onSuccess: async (newPost) => {
-      const queryFilter = {
-        queryKey: ["post-feed"],
-        predicate(query) {
-          return (
-            query.queryKey.includes("for-you") ||
-            (query.queryKey.includes("user-posts") &&
-              query.queryKey.includes(user.id))
-          );
-        },
-      } satisfies QueryFilters;
+      const queryFilter: QueryFilters<InfiniteData<PostsPage, string | null>> =
+        {
+          queryKey: ["post-feed"],
+          predicate(
+            query: Query<InfiniteData<PostsPage, string | null>, Error>,
+          ) {
+            return (
+              query.queryKey.includes("for-you") ||
+              (query.queryKey.includes("user-posts") &&
+                query.queryKey.includes(user.id))
+            );
+          },
+        };
 
       await queryClient.cancelQueries(queryFilter);
 
       queryClient.setQueriesData<InfiniteData<PostsPage, string | null>>(
         queryFilter,
         (oldData) => {
-          const firstPage = oldData?.pages[0];
+          if (!oldData) return oldData; // Vérification pour s'assurer que oldData n'est pas undefined
+
+          const firstPage = oldData.pages[0];
 
           if (firstPage) {
             return {
@@ -54,7 +60,8 @@ export function useSubmitPostMutation() {
 
       queryClient.invalidateQueries({
         queryKey: queryFilter.queryKey,
-        predicate(query) {
+        predicate(query: Query<InfiniteData<PostsPage, string | null>, Error>) {
+          if (!queryFilter.predicate) return false; // Vérification pour s'assurer que predicate n'est pas undefined
           return queryFilter.predicate(query) && !query.state.data;
         },
       });
