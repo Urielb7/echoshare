@@ -33,6 +33,7 @@ model User {
   comments              Comment[]
   receivedNotifications Notification[] @relation("Recipient")
   issuedNotifications   Notification[] @relation("Issuer")
+  matchingResponses     MatchingResponse[]
 
   createdAt DateTime @default(now())
 
@@ -147,4 +148,17 @@ enum NotificationType {
   LIKE
   FOLLOW
   COMMENT
+}
+
+model MatchingResponse {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  responses    String[]
+  interests    String[]
+  contentTypes String[]
+
+  createdAt DateTime @default(now())
+
+  @@map("matching_responses")
 }
